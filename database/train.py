@@ -3,15 +3,14 @@ import pandas as pd
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
-# from database.database_ import df_final1
-from database_ import df_final1
+from database.database_ import df_final1
+# from database_ import df_final1
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
 import torch.nn.init as init
 
 
-    # taking out the variable that we want to predict
+# taking out the variable that we want to predict
 data_y = df_final1[["annual_salary"]]
 
 
@@ -51,7 +50,7 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 
-def NeuralSalary_model():
+def neuralsalary_model():
     class NeuralSalary(nn.Module):
         def __init__(self, n_entries):
             super(NeuralSalary, self).__init__()
@@ -98,15 +97,6 @@ def NeuralSalary_model():
 
         print(f'epoch[{epoch + 1}/{n_epochs}], Loss: {avg_epoch_loss:.4f}')
 
-
-    # plt.figure(figsize=(10, 6))
-    # plt.plot(range(1, n_epochs + 1), losses, marker='o')
-    # plt.xlabel('Epoch')
-    # plt.ylabel('Loss')
-    # plt.title('Training Loss by Epoch')
-    # plt.grid(True)
-    # plt.show()
-
     model.eval()
     with torch.no_grad():
         outputs = model(tensor_X_test)
@@ -132,15 +122,15 @@ def NeuralSalary_model():
 
     torch.save(model.state_dict(), '../../Neural_Salary_Model.pth')
 
-    model = NeuralSalary(n_entries)
-    model.load_state_dict(torch.load('../../Neural_Salary_Model.pth'))
-    model.eval()
+    # model = NeuralSalary(n_entries)
+    # model.load_state_dict(torch.load('../../Neural_Salary_Model.pth'))
+    # model.eval()
 
-    return model
+    return model, mse
 
 
 def predict_salary(new_data):
-    model = NeuralSalary_model()
+    model = neuralsalary_model()
     new_data = pd.DataFrame([new_data])
     new_data = pd.get_dummies(new_data)
     missing_cols = list(set(data_x.columns) - set(new_data.columns))
