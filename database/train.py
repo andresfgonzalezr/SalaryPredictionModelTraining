@@ -125,7 +125,7 @@ def train_model():
 
     torch.save(model.state_dict(), '../../Neural_Salary_Model.pth')
 
-    # model = NeuralSalary(n_entries)
+    model = NeuralSalary(n_entries)
     # model.load_state_dict(torch.load('../../Neural_Salary_Model.pth'))
     # model.eval()
 
@@ -175,4 +175,8 @@ new_data = {
     'race': 'White'
 }
 
-print(predict_salary(new_data))
+if __name__ == "__main__":
+    treat_data()
+    train_model()
+    predict_salary(new_data)
+
