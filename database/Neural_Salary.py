@@ -3,8 +3,8 @@ import pandas as pd
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
-from database.database_ import df_final1
-# from database_ import df_final1
+# from database.database_ import df_final1
+from database_ import df_final1
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
