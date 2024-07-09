@@ -18,11 +18,4 @@ def predict(personal_data: InputData):
     return response
 
 
-# run me with uvicorn...
-
-# if __name__ == "__main__":
-    # clean_data()
-
-# if __name__ == '__main__':
-    # import uvicorn
-    # uvicorn.run(app)
+# run me with uvicorn
