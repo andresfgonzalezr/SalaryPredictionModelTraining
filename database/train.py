@@ -52,7 +52,7 @@ def treat_data():
     return train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test
 
 
-def neuralsalary_model():
+def train_model():
     train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
     class NeuralSalary(nn.Module):
         def __init__(self, n_entries):
@@ -134,7 +134,7 @@ def neuralsalary_model():
 
 def predict_salary(new_data):
     train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
-    model = neuralsalary_model()
+    model = train_model()
     new_data = pd.DataFrame([new_data])
     new_data = pd.get_dummies(new_data)
     missing_cols = list(set(data_x.columns) - set(new_data.columns))
