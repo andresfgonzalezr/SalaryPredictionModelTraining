@@ -26,5 +26,4 @@ This project is based on the previous project made Python-PostgreSQL-CRUD-AP, ma
 1. Setup Environment: Ensure Python and the required dependencies from requirements.txt are installed, for install the dependencies use "pip install -r requirements.txt".
 2. Run main.py: Execute main.py to initiate the project, use "uvicorn main:app --reload" to initiate the project.
 3. Enter the localHost to begin working with the database and the functions of the CRUD, use the URL: "http://127.0.0.1:8000/docs" or access the endpoints.
-4. The FastAPI interface will request information about the database in order to carry out any of the requests.
-5. To use the GPT function, input the desired prompt. It's best to specify the database request type in the prompt. For reading and updating, include relevant information (e.g., age, location, salary). For reading and deleting, provide the row ID and specify the action (create, read, update, or delete).
+4. The FastAPI interface will request information about the information from the database in order to predict the salary.
