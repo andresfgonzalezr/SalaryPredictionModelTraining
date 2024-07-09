@@ -7,14 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-db_url_1 = os.getenv('DATABASE_URL')
-engine_1 = create_engine(db_url_1)
-sql_query_1 = "SELECT * FROM final_data_andres"
-df_final1 = pd.read_sql(sql_query_1, engine_1)
-
-
-# Base = declarative_base()
-
-# Base.metadata.create_all(bind=engine_1)
-# SessionLocal = sessionmaker(bind=engine_1)
-# session = SessionLocal()
+db_url = os.getenv('DATABASE_URL')
+engine = create_engine(db_url)
+sql_query= "SELECT * FROM final_data_andres"
+df_final1 = pd.read_sql(sql_query, engine)

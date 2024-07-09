@@ -3,54 +3,57 @@ import pandas as pd
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
-from database.database_ import df_final1
-# from database_ import df_final1
+# from database.database_ import df_final1
+from database_ import df_final1
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import torch.nn.init as init
 
 
-# taking out the variable that we want to predict
-data_y = df_final1[["annual_salary"]]
+def treat_data():
+    # taking out the variable that we want to predict
+    data_y = df_final1[["annual_salary"]]
 
+    # removing from the dataset variables that doesn´t help us to predict
+    data_x = df_final1.drop(columns=['timestamp', 'job_context', 'annual_salary', 'additional_compensation', 'currency_other', 'income_context','id', "job_title"])
 
-# removing from the dataset variables that doesn´t help us to predict
-data_x = df_final1.drop(columns=['timestamp', 'job_context', 'annual_salary', 'additional_compensation', 'currency_other', 'income_context','id', "job_title"])
+    # Applying one hot encoding to the dataframe in order to the neural network works
+    data_x = pd.get_dummies(data_x)
 
-# Applying one hot encoding to the dataframe in order to the neural network works
-data_x = pd.get_dummies(data_x)
+    scaler = StandardScaler()
 
-scaler = StandardScaler()
+    data_y_normalized = scaler.fit_transform(data_y)
+    data_y_normalized = pd.DataFrame(data_y_normalized, columns=data_y.columns)
 
-data_y_normalized = scaler.fit_transform(data_y)
-data_y_normalized = pd.DataFrame(data_y_normalized, columns=data_y.columns)
+    # split the database into a train set and a test set, using sklearn for training using 80% and for test using 20%
+    X_train, X_test, y_train, y_test = train_test_split(data_x, data_y_normalized, test_size=0.2, random_state=21)
 
-# split the database into a train set and a test set, using sklearn for training using 80% and for test using 20%
-X_train, X_test, y_train, y_test = train_test_split(data_x, data_y_normalized, test_size=0.2, random_state=21)
+    X_train = X_train.astype(float)
+    X_test = X_test.astype(float)
+    y_train = y_train.astype(float)
+    y_test = y_test.astype(float)
 
-X_train = X_train.astype(float)
-X_test = X_test.astype(float)
-y_train = y_train.astype(float)
-y_test = y_test.astype(float)
+    n_entries = X_train.shape[1]
 
-n_entries = X_train.shape[1]
+    tensor_X_train = torch.tensor(X_train.values, dtype=torch.float32).to('cpu')
+    tensor_X_test = torch.tensor(X_test.values, dtype=torch.float32).to('cpu')
+    tensor_y_train = torch.tensor(y_train.values, dtype=torch.float32).to('cpu')
+    tensor_y_test = torch.tensor(y_test.values, dtype=torch.float32).to('cpu')
+    tensor_y_train = tensor_y_train[:,None]
+    tensor_y_test = tensor_y_test[:,None]
 
-tensor_X_train = torch.tensor(X_train.values, dtype=torch.float32).to('cpu')
-tensor_X_test = torch.tensor(X_test.values, dtype=torch.float32).to('cpu')
-tensor_y_train = torch.tensor(y_train.values, dtype=torch.float32).to('cpu')
-tensor_y_test = torch.tensor(y_test.values, dtype=torch.float32).to('cpu')
-tensor_y_train = tensor_y_train[:,None]
-tensor_y_test = tensor_y_test[:,None]
+    train_dataset = TensorDataset(tensor_X_train, tensor_y_train) #new code
+    test_dataset = TensorDataset(tensor_X_test, tensor_y_test) #new code
 
-train_dataset = TensorDataset(tensor_X_train, tensor_y_train) #new code
-test_dataset = TensorDataset(tensor_X_test, tensor_y_test) #new code
+    batch_size = 128
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-batch_size = 128
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    return train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test
 
 
 def neuralsalary_model():
+    train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
     class NeuralSalary(nn.Module):
         def __init__(self, n_entries):
             super(NeuralSalary, self).__init__()
@@ -126,10 +129,11 @@ def neuralsalary_model():
     # model.load_state_dict(torch.load('../../Neural_Salary_Model.pth'))
     # model.eval()
 
-    return model, mse
+    return model
 
 
 def predict_salary(new_data):
+    train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
     model = neuralsalary_model()
     new_data = pd.DataFrame([new_data])
     new_data = pd.get_dummies(new_data)
@@ -156,3 +160,19 @@ def predict_salary(new_data):
     print(f'Predicted outputs desnormalized: {predicted_outputs_desnormalized}')
 
     return predicted_outputs_desnormalized
+
+new_data = {
+    'age': '25-34',
+    'industry': 'computing or tech',
+    'currency': 'USD',
+    'country': 'united states',
+    'us_state': 'None',
+    'city': 'boston',
+    'years_experience_overall': '8-10 years',
+    'years_experience_field': '5-7 years',
+    'education_level': 'College degree',
+    'gender': 'Woman',
+    'race': 'White'
+}
+
+print(predict_salary(new_data))
