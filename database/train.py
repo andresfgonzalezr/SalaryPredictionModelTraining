@@ -53,7 +53,7 @@ def treat_data():
 
 
 def train_model():
-    train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
+    train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data() # main
     class NeuralSalary(nn.Module):
         def __init__(self, n_entries):
             super(NeuralSalary, self).__init__()
