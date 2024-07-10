@@ -8,6 +8,7 @@ from database_ import df_final1
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import torch.nn.init as init
+from models import NeuralSalary
 
 
 def treat_data():
@@ -54,28 +55,6 @@ def treat_data():
 
 def train_model():
     train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data() # main
-    class NeuralSalary(nn.Module):
-        def __init__(self, n_entries):
-            super(NeuralSalary, self).__init__()
-            self.Linear1 = nn.Linear(n_entries, 128)
-            self.Linear2 = nn.Linear(128, 128)
-            self.Linear3 = nn.Linear(128, 128)
-            self.Linear4 = nn.Linear(128, 1)
-            self.init_weights() #new code
-
-        def init_weights(self):
-            init.xavier_uniform_(self.Linear1.weight)
-            init.xavier_uniform_(self.Linear2.weight)
-            init.xavier_uniform_(self.Linear3.weight)
-            init.xavier_uniform_(self.Linear4.weight)
-
-        def forward(self, inputs):
-            prediction1 = F.relu(input=self.Linear1(inputs))
-            prediction2 = F.relu(input=self.Linear2(prediction1))
-            prediction3 = F.relu(input=self.Linear3(prediction2))
-            prediction_f = self.Linear4(prediction3)
-
-            return prediction_f
 
     lr = 0.0001
     n_epochs = 50
@@ -124,6 +103,7 @@ def train_model():
     print(f'MAE: {mae.item():.4f}')
 
     torch.save(model.state_dict(), '../../Neural_Salary_Model.pth')
+    model_path = f'../../Neural_Salary_Model.pth'
 
     model = NeuralSalary(n_entries)
     # model.load_state_dict(torch.load('../../Neural_Salary_Model.pth'))
@@ -135,6 +115,7 @@ def train_model():
 def predict_salary(new_data):
     train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
     model = train_model()
+    # model = model.load_state_dict(torch.load('../../Neural_Salary_Model.pth'))
     new_data = pd.DataFrame([new_data])
     new_data = pd.get_dummies(new_data)
     missing_cols = list(set(data_x.columns) - set(new_data.columns))
@@ -175,8 +156,4 @@ new_data = {
     'race': 'White'
 }
 
-if __name__ == "__main__":
-    treat_data()
-    train_model()
-    predict_salary(new_data)
-
+print(predict_salary(new_data))
