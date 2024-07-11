@@ -10,6 +10,8 @@ from sklearn.model_selection import train_test_split
 import torch.nn.init as init
 from models import NeuralSalary
 
+scaler = StandardScaler()
+
 
 def treat_data():
     # taking out the variable that we want to predict
@@ -21,7 +23,6 @@ def treat_data():
     # Applying one hot encoding to the dataframe in order to the neural network works
     data_x = pd.get_dummies(data_x)
 
-    scaler = StandardScaler()
 
     data_y_normalized = scaler.fit_transform(data_y)
     data_y_normalized = pd.DataFrame(data_y_normalized, columns=data_y.columns)
@@ -50,11 +51,11 @@ def treat_data():
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    return train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test
+    return train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test
 
 
 def train_model():
-    train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data() # main
+    train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data() # main
 
     lr = 0.0001
     n_epochs = 50
@@ -105,17 +106,17 @@ def train_model():
     torch.save(model.state_dict(), '../../Neural_Salary_Model.pth')
     model_path = f'../../Neural_Salary_Model.pth'
 
-    model = NeuralSalary(n_entries)
+    # model = NeuralSalary(n_entries)
     # model.load_state_dict(torch.load('../../Neural_Salary_Model.pth'))
     # model.eval()
 
-    return model
 
+def predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'):
+    train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
+    model = NeuralSalary(n_entries)
+    model.load_state_dict(torch.load(model_path))
+    model.eval()
 
-def predict_salary(new_data):
-    train_loader, test_loader, scaler, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
-    model = train_model()
-    # model = model.load_state_dict(torch.load('../../Neural_Salary_Model.pth'))
     new_data = pd.DataFrame([new_data])
     new_data = pd.get_dummies(new_data)
     missing_cols = list(set(data_x.columns) - set(new_data.columns))
@@ -156,4 +157,4 @@ new_data = {
     'race': 'White'
 }
 
-print(predict_salary(new_data))
+print(predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'))
