@@ -23,6 +23,7 @@ def treat_data():
     # Applying one hot encoding to the dataframe in order to the neural network works
     data_x = pd.get_dummies(data_x)
 
+    print(f"esto es data x: {data_x}")
 
     data_y_normalized = scaler.fit_transform(data_y)
     data_y_normalized = pd.DataFrame(data_y_normalized, columns=data_y.columns)
@@ -113,7 +114,7 @@ def train_model():
 
 def predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'):
     train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
-    model = NeuralSalary(n_entries)
+    model = NeuralSalary(1669)
     model.load_state_dict(torch.load(model_path))
     model.eval()
 
@@ -135,6 +136,7 @@ def predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'):
 
     mean_salary = scaler.mean_[0]
     std_salary = scaler.scale_[0]
+    print(mean_salary, std_salary)
 
     predicted_outputs_desnormalized = predicted_outputs * std_salary + mean_salary
 
@@ -158,3 +160,11 @@ new_data = {
 }
 
 print(predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'))
+
+# def main():
+    # treat_data()
+    #train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
+    #train_model()
+    #predict_salary(new_data, model_path='../../Neural_Salary_Model.pth')
+
+
