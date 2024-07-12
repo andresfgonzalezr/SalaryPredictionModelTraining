@@ -9,8 +9,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import torch.nn.init as init
 from models import NeuralSalary
-
-scaler = StandardScaler()
+import pickle
+import joblib
 
 
 def treat_data():
@@ -23,10 +23,14 @@ def treat_data():
     # Applying one hot encoding to the dataframe in order to the neural network works
     data_x = pd.get_dummies(data_x)
 
-    print(f"esto es data x: {data_x}")
+    data_x.to_pickle('data_x.pkl')
 
-    data_y_normalized = scaler.fit_transform(data_y)
-    data_y_normalized = pd.DataFrame(data_y_normalized, columns=data_y.columns)
+    data_y_to_norm = df_final1["annual_salary"]
+    data_y_to_norm = data_y_to_norm.astype('float64')
+    min_val = data_y_to_norm.min()
+    max_val = data_y_to_norm.max()
+    data_y_normalized = (data_y_to_norm - (min_val / (max_val - min_val)))
+    data_y_normalized.to_pickle('data_y_normalized.pkl')
 
     # split the database into a train set and a test set, using sklearn for training using 80% and for test using 20%
     X_train, X_test, y_train, y_test = train_test_split(data_x, data_y_normalized, test_size=0.2, random_state=21)
@@ -52,11 +56,11 @@ def treat_data():
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    return train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test
+    return train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test, data_y_normalized
 
 
 def train_model():
-    train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data() # main
+    train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test, data_y_normalized = treat_data() # main
 
     lr = 0.0001
     n_epochs = 50
@@ -85,11 +89,7 @@ def train_model():
     with torch.no_grad():
         outputs = model(tensor_X_test)
 
-        mean_salary = scaler.mean_
-        std_salary = scaler.scale_
-
-        outputs_desnormalized = outputs * std_salary + mean_salary
-        outputs_desnormalized = outputs_desnormalized.cpu().numpy()
+        outputs_desnormalized = data_y_normalized * (1900000 - 28) + 28
 
         tensor_outputs_desnormalized = torch.tensor(outputs_desnormalized, dtype=torch.float32)
 
@@ -113,10 +113,14 @@ def train_model():
 
 
 def predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'):
-    train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
+    # train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
+
     model = NeuralSalary(1669)
     model.load_state_dict(torch.load(model_path))
     model.eval()
+
+    data_y_normalized = pd.read_pickle('data_y_normalized.pkl')
+    data_x = pd.read_pickle('data_x.pkl')
 
     new_data = pd.DataFrame([new_data])
     new_data = pd.get_dummies(new_data)
@@ -134,9 +138,8 @@ def predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'):
 
     predicted_outputs = predicted_outputs.cpu().numpy()
 
-    mean_salary = scaler.mean_[0]
-    std_salary = scaler.scale_[0]
-    print(mean_salary, std_salary)
+    std_salary = data_y_normalized.std()
+    mean_salary = data_y_normalized.mean()
 
     predicted_outputs_desnormalized = predicted_outputs * std_salary + mean_salary
 
@@ -144,6 +147,7 @@ def predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'):
     print(f'Predicted outputs desnormalized: {predicted_outputs_desnormalized}')
 
     return predicted_outputs_desnormalized
+
 
 new_data = {
     'age': '25-34',
