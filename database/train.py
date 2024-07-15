@@ -23,8 +23,10 @@ def treat_data():
     # Applying one hot encoding to the dataframe in order to the neural network works
     data_x = pd.get_dummies(data_x)
 
+    # Saving data_x into a pickle file
     data_x.to_pickle('data_x.pkl')
 
+    # Normalizing the data from the y_data column using math and saving into a pickle file
     data_y_to_norm = df_final1["annual_salary"]
     data_y_to_norm = data_y_to_norm.astype('float64')
     min_val = data_y_to_norm.min()
@@ -42,6 +44,7 @@ def treat_data():
 
     n_entries = X_train.shape[1]
 
+    # tranforming into tensors
     tensor_X_train = torch.tensor(X_train.values, dtype=torch.float32).to('cpu')
     tensor_X_test = torch.tensor(X_test.values, dtype=torch.float32).to('cpu')
     tensor_y_train = torch.tensor(y_train.values, dtype=torch.float32).to('cpu')
@@ -52,6 +55,7 @@ def treat_data():
     train_dataset = TensorDataset(tensor_X_train, tensor_y_train) #new code
     test_dataset = TensorDataset(tensor_X_test, tensor_y_test) #new code
 
+    # Defining the batch size and using loaders
     batch_size = 128
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
@@ -62,6 +66,7 @@ def treat_data():
 def train_model():
     train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test, data_y_normalized = treat_data() # main
 
+    # Defining hyperparameters for the training model
     lr = 0.0001
     n_epochs = 50
 
@@ -70,6 +75,7 @@ def train_model():
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     losses = []
 
+    # Organizing the model
     for epoch in range(n_epochs):
         model.train()
         epoch_loss = 0
@@ -85,6 +91,7 @@ def train_model():
 
         print(f'epoch[{epoch + 1}/{n_epochs}], Loss: {avg_epoch_loss:.4f}')
 
+    # Desnormalizing the output
     model.eval()
     with torch.no_grad():
         outputs = model(tensor_X_test)
@@ -104,6 +111,7 @@ def train_model():
     mae = torch.mean(torch.abs(tensor_outputs_desnormalized.squeeze() - tensor_y_test.squeeze()))
     print(f'MAE: {mae.item():.4f}')
 
+    # Saving the model
     torch.save(model.state_dict(), '../../Neural_Salary_Model.pth')
     model_path = f'../../Neural_Salary_Model.pth'
 
@@ -111,17 +119,19 @@ def train_model():
     # model.load_state_dict(torch.load('../../Neural_Salary_Model.pth'))
     # model.eval()
 
-
+# Giving the new data as a dictionary, use the ../utils/models.py for the keys
 def predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'):
-    # train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
 
+    # Defining the model size and loading the training model
     model = NeuralSalary(1669)
     model.load_state_dict(torch.load(model_path))
     model.eval()
 
+    # loading the data_x and the data normalized
     data_y_normalized = pd.read_pickle('data_y_normalized.pkl')
     data_x = pd.read_pickle('data_x.pkl')
 
+    # Organizing the new data for using the model
     new_data = pd.DataFrame([new_data])
     new_data = pd.get_dummies(new_data)
     missing_cols = list(set(data_x.columns) - set(new_data.columns))
@@ -141,6 +151,7 @@ def predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'):
     std_salary = data_y_normalized.std()
     mean_salary = data_y_normalized.mean()
 
+    # Desnormalizing the outputs
     predicted_outputs_desnormalized = predicted_outputs * std_salary + mean_salary
 
     print(f'Predicted outputs: {predicted_outputs}')
@@ -148,27 +159,5 @@ def predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'):
 
     return predicted_outputs_desnormalized
 
-
-new_data = {
-    'age': '25-34',
-    'industry': 'computing or tech',
-    'currency': 'USD',
-    'country': 'united states',
-    'us_state': 'None',
-    'city': 'boston',
-    'years_experience_overall': '8-10 years',
-    'years_experience_field': '5-7 years',
-    'education_level': 'College degree',
-    'gender': 'Woman',
-    'race': 'White'
-}
-
-print(predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'))
-
-# def main():
-    # treat_data()
-    #train_loader, test_loader, data_x, n_entries, tensor_X_test, tensor_y_test = treat_data()
-    #train_model()
-    #predict_salary(new_data, model_path='../../Neural_Salary_Model.pth')
 
 
