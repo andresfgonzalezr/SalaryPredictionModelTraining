@@ -10,7 +10,6 @@ from sklearn.model_selection import train_test_split
 import torch.nn.init as init
 from models import NeuralSalary
 import pickle
-import joblib
 
 
 def treat_data():
@@ -158,6 +157,3 @@ def predict_salary(new_data, model_path='../../Neural_Salary_Model.pth'):
     print(f'Predicted outputs desnormalized: {predicted_outputs_desnormalized}')
 
     return predicted_outputs_desnormalized
-
-
-
